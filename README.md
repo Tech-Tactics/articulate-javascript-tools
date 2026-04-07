@@ -30,7 +30,7 @@ articulate-javascript-tools/
 **Version:** 1.0.0
 **Tested with:** Articulate Storyline 360 x64 v3.113.36519.0
 
-Injects a dynamic progress bar with percentage text and a slide counter into the Storyline course player chrome. Displays "Course Progress: XX%" alongside a visual bar and "Slide: X/Y" — all in the player's top bar, freeing up slide real estate.
+Injects a dynamic progress bar with percentage text and a slide counter into the Storyline course player chrome. Displays "Course Progress: XX%" alongside a visual bar and "Slide: X/Y", all in the player's top bar, freeing up slide real estate.
 
 **Setup:**
 
@@ -52,7 +52,7 @@ See [js-trigger-progress-bar-slide-count-README.md](storyline%20360/js-trigger-p
 **Version:** 1.0.0
 **Tested with:** Articulate Storyline 360 x64 v3.113.36519.0
 
-Automatically detects which scene the learner is currently in and writes the scene name into a `SceneTitle` variable. Display it on any slide using `%SceneTitle%` — no hard-coding needed.
+Automatically detects which scene the learner is currently in and writes the scene name into a `SceneTitle` variable. Display it on any slide using `%SceneTitle%`. No hard-coding needed.
 
 See [js-trigger-scene-title-README.md](storyline%20360/js-trigger-scene-title-README.md) for full setup, usage, and troubleshooting details.
 
@@ -62,7 +62,7 @@ See [js-trigger-scene-title-README.md](storyline%20360/js-trigger-scene-title-RE
 **Version:** 1.0.0
 **Tested with:** Articulate Storyline 360 x64 v3.113.36519.0
 
-Retrieves the learner's name from the LMS via the SCORM API, reformats it from "Last, First" to "First Last", and stores it in an `lmsName` variable. Useful for personalized completion certificates or greeting messages — reference it on-slide with `%lmsName%`.
+Retrieves the learner's name from the LMS via the SCORM API, reformats it from "Last, First" to "First Last", and stores it in an `lmsName` variable. Useful for personalized completion certificates or greeting messages. Reference it on-slide with `%lmsName%`.
 
 See [js-trigger-retrieve-lms-name-README.md](storyline%20360/js-trigger-retrieve-lms-name-README.md) for full setup, requirements, and considerations.
 
