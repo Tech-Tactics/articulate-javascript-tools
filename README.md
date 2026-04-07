@@ -24,7 +24,7 @@ articulate-javascript-tools/
 
 ### JavaScript Trigger Progress Bar Slide Count
 
-**File:** `storyline/js-trigger-progress-bar-slide-count.js`
+**File:** `storyline 360/js-trigger-progress-bar-slide-count.js`
 **Version:** 1.0.0
 **Tested with:** Articulate Storyline 360 x64 v3.113.36519.0
 
@@ -42,17 +42,17 @@ Injects a dynamic progress bar with percentage text and a slide counter into the
 
 The top of the script contains clearly labeled variables for colors, sizing, and positioning. Adjust these to match your course's branding.
 
-See [js-trigger-progress-bar-slide-count-README.md](storyline/js-trigger-progress-bar-slide-count-README.md) for full setup, customization, and slide counter details.
+See [js-trigger-progress-bar-slide-count-README.md](storyline 360/js-trigger-progress-bar-slide-count-README.md) for full setup, customization, and slide counter details.
 
 ### JavaScript Trigger Scene Title
 
-**File:** `storyline/js-trigger-scene-title.js`
+**File:** `storyline 360/js-trigger-scene-title.js`
 **Version:** 1.0.0
 **Tested with:** Articulate Storyline 360 x64 v3.113.36519.0
 
 Automatically detects which scene the learner is currently in and writes the scene name into a `SceneTitle` variable. Display it on any slide using `%SceneTitle%` — no hard-coding needed.
 
-See [js-trigger-scene-title-README.md](storyline/js-trigger-scene-title-README.md) for full setup, usage, and troubleshooting details.
+See [js-trigger-scene-title-README.md](storyline 360/js-trigger-scene-title-README.md) for full setup, usage, and troubleshooting details.
 
 ## Rise 360 Scripts
 
