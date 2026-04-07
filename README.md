@@ -1,6 +1,6 @@
 # Articulate JavaScript Tools
 
-A collection of JavaScript scripts for extending Articulate Storyline 360 and Articulate Rise courses beyond their out-of-the-box capabilities.
+A collection of JavaScript scripts for extending Articulate Storyline 360 and Articulate Rise 360 courses beyond their out-of-the-box capabilities.
 
 ## Author
 
@@ -10,17 +10,17 @@ A collection of JavaScript scripts for extending Articulate Storyline 360 and Ar
 
 ```
 articulate-javascript-tools/
-├── storyline/
+├── storyline 360/
 │   ├── js-trigger-progress-bar-slide-count.js
 │   ├── js-trigger-progress-bar-slide-count-README.md
 │   ├── js-trigger-scene-title.js
 │   └── js-trigger-scene-title-README.md
-├── rise/
+├── rise 360/
 ├── LICENSE
 └── README.md
 ```
 
-## Storyline Scripts
+## Storyline 360 Scripts
 
 ### JavaScript Trigger Progress Bar Slide Count
 
@@ -54,7 +54,7 @@ Automatically detects which scene the learner is currently in and writes the sce
 
 See [js-trigger-scene-title-README.md](storyline/js-trigger-scene-title-README.md) for full setup, usage, and troubleshooting details.
 
-## Rise Scripts
+## Rise 360 Scripts
 
 *Coming soon.*
 
