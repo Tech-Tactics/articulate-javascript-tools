@@ -23,7 +23,7 @@
  * Notes:       - Requires the course to be hosted in an LMS that exposes
  *                the SCORM API (lmsAPI.GetStudentName).
  *              - Will not work in Storyline preview or standalone published
- *                output — the LMS API is only available when launched from
+ *                output - the LMS API is only available when launched from
  *                an LMS.
  *              - Assumes the LMS returns the name in "Last, First" format
  *                (comma-separated). If the LMS uses a different format,
