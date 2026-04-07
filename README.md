@@ -14,7 +14,9 @@ articulate-javascript-tools/
 │   ├── js-trigger-progress-bar-slide-count.js
 │   ├── js-trigger-progress-bar-slide-count-README.md
 │   ├── js-trigger-scene-title.js
-│   └── js-trigger-scene-title-README.md
+│   ├── js-trigger-scene-title-README.md
+│   ├── js-trigger-retrieve-lms-name.js
+│   └── js-trigger-retrieve-lms-name-README.md
 ├── rise 360/
 ├── LICENSE
 └── README.md
@@ -42,7 +44,7 @@ Injects a dynamic progress bar with percentage text and a slide counter into the
 
 The top of the script contains clearly labeled variables for colors, sizing, and positioning. Adjust these to match your course's branding.
 
-See [js-trigger-progress-bar-slide-count-README.md](storyline 360/js-trigger-progress-bar-slide-count-README.md) for full setup, customization, and slide counter details.
+See [js-trigger-progress-bar-slide-count-README.md](storyline%20360/js-trigger-progress-bar-slide-count-README.md) for full setup, customization, and slide counter details.
 
 ### JavaScript Trigger Scene Title
 
@@ -52,7 +54,17 @@ See [js-trigger-progress-bar-slide-count-README.md](storyline 360/js-trigger-pro
 
 Automatically detects which scene the learner is currently in and writes the scene name into a `SceneTitle` variable. Display it on any slide using `%SceneTitle%` — no hard-coding needed.
 
-See [js-trigger-scene-title-README.md](storyline 360/js-trigger-scene-title-README.md) for full setup, usage, and troubleshooting details.
+See [js-trigger-scene-title-README.md](storyline%20360/js-trigger-scene-title-README.md) for full setup, usage, and troubleshooting details.
+
+### JavaScript Trigger Retrieve LMS Name
+
+**File:** `storyline 360/js-trigger-retrieve-lms-name.js`
+**Version:** 1.0.0
+**Tested with:** Articulate Storyline 360 x64 v3.113.36519.0
+
+Retrieves the learner's name from the LMS via the SCORM API, reformats it from "Last, First" to "First Last", and stores it in an `lmsName` variable. Useful for personalized completion certificates or greeting messages — reference it on-slide with `%lmsName%`.
+
+See [js-trigger-retrieve-lms-name-README.md](storyline%20360/js-trigger-retrieve-lms-name-README.md) for full setup, requirements, and considerations.
 
 ## Rise 360 Scripts
 
