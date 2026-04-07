@@ -41,7 +41,7 @@ const compColor   = "#19BB32";  // Fill color when progress reaches 100%
 const borderRad   = "100px";    // Border radius for rounded bar ends
 const progressVar = "Progress"; // Storyline variable name (case-sensitive)
 
-/* Fallback Storyline variables — only used if the built-in slide number
+/* Fallback Storyline variables - only used if the built-in slide number
    variables (MenuSection.SlideNumber / MenuSection.TotalSlides) are not
    readable via JavaScript. Create these manually if needed. */
 const fallbackCurrentSlideVar = "CurrentSlide";
@@ -65,14 +65,14 @@ const barX              = "200px"; // Left offset of the bar from the wrapper
 const slideTextX        = "440px"; // Left offset of the slide counter text
 
 /* -----------------------------------------------------------------------
- * INTERNAL LOGIC — edit below only if you understand the structure
+ * INTERNAL LOGIC - edit below only if you understand the structure
  * ----------------------------------------------------------------------- */
 
 /* Get a reference to the Storyline player API */
 const player = GetPlayer();
 
 /**
- * getRawVar — Safely read any Storyline variable by name.
+ * getRawVar - Safely read any Storyline variable by name.
  * Returns null if the variable does not exist or throws an error.
  */
 function getRawVar(varName) {
@@ -84,7 +84,7 @@ function getRawVar(varName) {
 }
 
 /**
- * getNumVar — Read a Storyline variable and coerce it to a number.
+ * getNumVar - Read a Storyline variable and coerce it to a number.
  * Returns the provided fallback value if the variable is missing or
  * not a finite number.
  */
@@ -95,7 +95,7 @@ function getNumVar(varName, fallback) {
 }
 
 /**
- * getProgressValue — Returns the current progress percentage, clamped
+ * getProgressValue - Returns the current progress percentage, clamped
  * between 0 and 100.
  */
 function getProgressValue() {
@@ -103,7 +103,7 @@ function getProgressValue() {
 }
 
 /**
- * getSlideValues — Attempts to read the current slide number and total
+ * getSlideValues - Attempts to read the current slide number and total
  * slide count. Tries Storyline's built-in variables first, then falls
  * back to user-created variables if the built-ins aren't available.
  *
@@ -131,7 +131,7 @@ function getSlideValues() {
 }
 
 /* -----------------------------------------------------------------------
- * ensureUI — Creates the DOM elements for the progress widget if they
+ * ensureUI - Creates the DOM elements for the progress widget if they
  * don't already exist. On subsequent slide loads the existing elements
  * are reused and only their values are updated (see updateUI).
  * ----------------------------------------------------------------------- */
@@ -220,7 +220,7 @@ function ensureUI() {
 }
 
 /* -----------------------------------------------------------------------
- * updateUI — Reads the latest variable values from Storyline and pushes
+ * updateUI - Reads the latest variable values from Storyline and pushes
  * them into the DOM elements created by ensureUI().
  * ----------------------------------------------------------------------- */
 function updateUI() {
