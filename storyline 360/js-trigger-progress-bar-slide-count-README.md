@@ -8,9 +8,9 @@
 
 Injects a dynamic progress bar with percentage text and a slide counter into the Storyline 360 course player's top bar. Displays three elements side by side:
 
-- **"Course Progress: XX%"** — text label
-- **Visual progress bar** — fills and changes color at 100%
-- **"Slide: X/Y"** — current slide number out of total
+- **"Course Progress: XX%"** - text label
+- **Visual progress bar** - fills and changes color at 100%
+- **"Slide: X/Y"** - current slide number out of total
 
 This eliminates the need for on-slide progress elements or a dedicated completion page, keeping all slide real estate available for content.
 
