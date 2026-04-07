@@ -6,7 +6,7 @@
 
 ## What It Does
 
-Automatically detects which scene the learner is currently in and writes the scene name into a Storyline variable called `SceneTitle`. This lets you display the current scene name anywhere on your slides using a `%SceneTitle%` text reference — no need to hard-code scene labels on every slide or maintain them manually when you reorganize.
+Automatically detects which scene the learner is currently in and writes the scene name into a Storyline variable called `SceneTitle`. This lets you display the current scene name anywhere on your slides using a `%SceneTitle%` text reference. No need to hard-code scene labels on every slide or maintain them manually when you reorganize.
 
 ## How It Works
 
@@ -21,8 +21,8 @@ If the menu hasn't loaded yet when the script fires, it retries automatically (u
 
 1. Open your Storyline project → **View → Slide Master** → select the **top-level master slide**.
 2. Create two text variables in Storyline:
-   - `CurrentSlideTitle` — set via a trigger to the built-in slide title, or leave it for the script to read.
-   - `SceneTitle` — the script writes to this; reference it on-slide with `%SceneTitle%`.
+   - `CurrentSlideTitle` - set via a trigger to the built-in slide title, or leave it for the script to read.
+   - `SceneTitle` - the script writes to this; reference it on-slide with `%SceneTitle%`.
 3. Add a trigger: **Execute JavaScript** → paste the contents of `js-trigger-scene-title.js`.
 4. The course menu must be **enabled** in the player for the script to find scene headings.
 
