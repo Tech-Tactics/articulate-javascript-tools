@@ -42,7 +42,7 @@
   const retryDelay  = 150;  // Milliseconds between retries
 
   /**
-   * normalizeText — Collapses all whitespace in a string down to single
+   * normalizeText - Collapses all whitespace in a string down to single
    * spaces and trims the ends. Used to safely compare slide titles that
    * may contain extra whitespace or line breaks in the DOM.
    */
@@ -51,7 +51,7 @@
   }
 
   /**
-   * isSceneRow — Returns true if a menu list-item represents a scene
+   * isSceneRow - Returns true if a menu list-item represents a scene
    * heading rather than an individual slide. Storyline marks these
    * with a data-is-scene="true" attribute.
    */
@@ -60,7 +60,7 @@
   }
 
   /**
-   * getMenuRows — Returns an array of all menu list-item elements
+   * getMenuRows - Returns an array of all menu list-item elements
    * (both scene headings and slide entries) from the player sidebar.
    */
   function getMenuRows() {
@@ -70,7 +70,7 @@
   }
 
   /**
-   * updateSceneTitle — Main logic. Reads the current slide title from
+   * updateSceneTitle - Main logic. Reads the current slide title from
    * Storyline, finds the matching row in the menu, then walks backward
    * through the menu rows until it hits a scene heading. Writes the
    * result into the "SceneTitle" variable.
@@ -99,7 +99,7 @@
     var rows = getMenuRows();
 
     if (!rows.length) {
-      /* Menu hasn't rendered yet — retry if we have attempts left */
+      /* Menu hasn't rendered yet - retry if we have attempts left */
       if (attempt < maxAttempts) {
         setTimeout(function () {
           updateSceneTitle(attempt + 1);
