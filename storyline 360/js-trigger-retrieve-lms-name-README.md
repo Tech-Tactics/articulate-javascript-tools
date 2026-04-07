@@ -6,7 +6,7 @@
 
 ## What It Does
 
-Pulls the learner's name from the LMS using the SCORM API and reformats it from the standard "Last, First" format to "First Last". The result is stored in a Storyline variable called `lmsName`, which can be displayed on any slide using `%lmsName%` — useful for personalized completion certificates or greeting messages.
+Pulls the learner's name from the LMS using the SCORM API and reformats it from the standard "Last, First" format to "First Last". The result is stored in a Storyline variable called `lmsName`, which can be displayed on any slide using `%lmsName%`, which is useful for personalized completion certificates or greeting messages.
 
 ## How It Works
 
@@ -24,11 +24,11 @@ Pulls the learner's name from the LMS using the SCORM API and reformats it from 
 ## Requirements
 
 - The course must be hosted in an LMS that exposes the SCORM API.
-- This script will **not** work in Storyline preview or standalone published output — `lmsAPI` is only available when the course is launched from an LMS.
+- This script will **not** work in Storyline preview or standalone published output. `lmsAPI` is only available when the course is launched from an LMS.
 
 ## Considerations
 
-- Most LMS platforms return names as "Last, First", but some may differ. If your LMS returns "First Last" already, this script would produce unexpected results — test with your specific LMS.
+- Most LMS platforms return names as "Last, First", but some may differ. If your LMS returns "First Last" already, this script would produce unexpected results, so test with your specific LMS.
 - The split on the comma may leave a leading space on the first name (e.g. " First"). You could add `.trim()` calls if you see extra whitespace:
   ```js
   let newName = array[1].trim() + ' ' + array[0].trim();
