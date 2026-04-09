@@ -4,37 +4,56 @@
  * ============================================================================
  *
  * Purpose:     Reads the current slide's title from the Storyline player,
- *              looks up the course menu to find which scene the slide
- *              belongs to, and writes the scene name into a Storyline
- *              variable called "SceneTitle". This lets authors display
- *              the current scene name on-slide (via a text reference to
- *              %SceneTitle%) without hard-coding it per slide.
+ *              determines which scene the slide belongs to, and writes the
+ *              scene name into a Storyline variable called "SceneTitle".
+ *              This lets authors display the current scene name on-slide
+ *              (via a text reference to %SceneTitle%) without manually
+ *              typing the scene name on every slide.
+ *
+ *              Storyline does not provide a built-in variable for the
+ *              scene name, so this script fills that gap.
  *
  * Author:      Joseph Black
  * Date:        2026-04-08
- * Version:     1.0.1
+ * Version:     2.0.0
  *
  * Software:    Articulate Storyline 360 x64 v3.114.36620.0
  *
  * Usage:       Add this script as an "Execute JavaScript" trigger on the
- *              top-level Slide Master. It fires each time the timeline
+ *              parent Slide Master. It fires each time the timeline
  *              starts. Two Storyline variables are required:
- *                - CurrentSlideTitle  (text, set via built-in or trigger)
+ *                - CurrentSlideTitle  (text, set via Adjust Variable
+ *                  trigger to Menu.SlideTitle)
  *                - SceneTitle         (text, this script writes to it)
  *
- * Notes:       - The script inspects the player menu DOM to find scene
- *                headings, so the course menu must be enabled.
- *              - If the menu hasn't rendered yet when the script runs,
- *                it retries up to 20 times at 150 ms intervals.
+ * Detection:   The script uses two methods to find the scene name:
+ *
+ *              Method 1 (Primary) - Internal Data Store:
+ *              Reads DS.slideNumberManager.links, which contains the
+ *              full course structure with scenes and their child slides.
+ *              This works whether the course menu is enabled or not.
+ *
+ *              Method 2 (Fallback) - Menu DOM:
+ *              If the data store is unavailable, the script searches the
+ *              player menu DOM for scene headings. This requires the
+ *              course menu to be enabled in the player.
+ *
+ *              If both methods fail, a diagnostic message is written
+ *              to SceneTitle for troubleshooting.
+ *
+ * Notes:       - Works with or without the player menu enabled.
+ *              - Works whether player menu numbering is on or off.
+ *              - HTML entities in scene names (e.g. &amp;) are decoded
+ *                automatically.
  *              - Diagnostic strings (prefixed "ERR", "NO", "BLANK") are
  *                written to SceneTitle when lookups fail, making it easy
  *                to troubleshoot during development.
- *              - Works whether player menu numbering is on or off. Slide
- *                matching uses endsWith to handle numbering prefixes, and
- *                scene names are stripped of leading number prefixes
- *                before being written to SceneTitle.
  *
- * Changelog:   1.0.1 (2026-04-08) - Fixed slide matching to use endsWith
+ * Changelog:   2.0.0 (2026-04-08) - Added primary detection method using
+ *                DS.slideNumberManager.links so the script works without
+ *                the player menu enabled. Menu DOM lookup is now a
+ *                fallback. Handles HTML entity decoding in scene names.
+ *              1.0.1 (2026-04-08) - Fixed slide matching to use endsWith
  *                instead of strict equality so menu numbering prefixes
  *                do not break the lookup. Added number prefix stripping
  *                on scene titles.
@@ -45,20 +64,100 @@
 (function () {
 
   /* --- Storyline player API reference --- */
-  const player = GetPlayer();
+  var player = GetPlayer();
 
-  /* --- Retry settings for waiting on menu DOM --- */
-  const maxAttempts = 20;   // Maximum number of retries
-  const retryDelay  = 150;  // Milliseconds between retries
+  /* --- Retry settings for waiting on data/DOM --- */
+  var maxAttempts = 20;   // Maximum number of retries
+  var retryDelay  = 150;  // Milliseconds between retries
 
   /**
    * normalizeText - Collapses all whitespace in a string down to single
    * spaces and trims the ends. Used to safely compare slide titles that
-   * may contain extra whitespace or line breaks in the DOM.
+   * may contain extra whitespace or line breaks.
    */
   function normalizeText(value) {
     return (value || "").replace(/\s+/g, " ").trim();
   }
+
+  /**
+   * decodeHtmlEntities - Converts HTML entities (e.g. &amp; &lt; &gt;)
+   * back to their normal characters. Scene names from the internal data
+   * store may contain HTML entities that need to be cleaned up before
+   * displaying on-slide.
+   */
+  function decodeHtmlEntities(str) {
+    var el = document.createElement("textarea");
+    el.innerHTML = str;
+    return el.value;
+  }
+
+  /* =======================================================================
+   * METHOD 1 (Primary) - Internal Data Store
+   *
+   * Reads DS.slideNumberManager.links which contains an array of scene
+   * objects. Each scene has a displaytext (the scene name) and a links
+   * array of child slides, each with their own displaytext (slide name).
+   *
+   * This data exists whether the player menu is enabled or not.
+   * ======================================================================= */
+
+  /**
+   * getLinksData - Safely retrieves the links array from the internal
+   * data store. Returns null if the data store is not available.
+   */
+  function getLinksData() {
+    try {
+      if (typeof DS !== "undefined" &&
+          DS.slideNumberManager &&
+          DS.slideNumberManager.links &&
+          DS.slideNumberManager.links.length > 0) {
+        return DS.slideNumberManager.links;
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  /**
+   * findSceneFromDataStore - Searches the internal data store for a
+   * scene that contains a slide matching the current slide title.
+   * Returns the decoded scene name, or null if no match is found.
+   */
+  function findSceneFromDataStore(currentSlideTitle) {
+    var links = getLinksData();
+    if (!links) return null;
+
+    for (var i = 0; i < links.length; i++) {
+      var scene = links[i];
+      var children = scene.links;
+
+      if (!children) continue;
+
+      for (var j = 0; j < children.length; j++) {
+        var childTitle = normalizeText(decodeHtmlEntities(children[j].displaytext || ""));
+
+        /* Use endsWith to handle cases where the data store includes
+           numbering prefixes, and also check strict equality */
+        if (childTitle === currentSlideTitle || childTitle.endsWith(currentSlideTitle)) {
+          var sceneName = normalizeText(decodeHtmlEntities(scene.displaytext || ""));
+
+          /* Strip leading number prefix if present (e.g. "2. Module 1"
+             becomes "Module 1") */
+          sceneName = sceneName.replace(/^\d+\.\s*/, "");
+
+          return sceneName || null;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /* =======================================================================
+   * METHOD 2 (Fallback) - Menu DOM
+   *
+   * Searches the player menu for scene headings marked with
+   * data-is-scene="true". Requires the course menu to be enabled.
+   * ======================================================================= */
 
   /**
    * isSceneRow - Returns true if a menu list-item represents a scene
@@ -80,17 +179,62 @@
   }
 
   /**
-   * updateSceneTitle - Main logic. Reads the current slide title from
-   * Storyline, finds the matching row in the menu, then walks backward
-   * through the menu rows until it hits a scene heading. Strips any
-   * menu numbering prefix from the scene name before writing the
-   * result into the "SceneTitle" variable.
+   * findSceneFromMenuDOM - Searches the player menu DOM for the current
+   * slide, then walks backward through the menu rows until it finds a
+   * scene heading. Returns the scene name, or a diagnostic string if
+   * the lookup fails at any step.
+   */
+  function findSceneFromMenuDOM(currentSlideTitle) {
+    var rows = getMenuRows();
+
+    if (!rows.length) return "NO menu rows";
+
+    /* Filter to slide-only rows and find the current slide.
+       Uses endsWith so "8.17. Decision 3" matches "Decision 3"
+       when menu numbering is enabled. */
+    var slideRows = rows.filter(function (row) {
+      return !isSceneRow(row);
+    });
+
+    var matchingSlideRow = slideRows.find(function (row) {
+      return normalizeText(row.getAttribute("data-slide-title")).endsWith(currentSlideTitle);
+    });
+
+    if (!matchingSlideRow) return "NO slide match: " + currentSlideTitle;
+
+    /* Walk backward from the matched slide to find its scene */
+    var rowIndex = rows.indexOf(matchingSlideRow);
+
+    if (rowIndex < 0) return "NO row index";
+
+    for (var i = rowIndex - 1; i >= 0; i--) {
+      var row = rows[i];
+
+      if (isSceneRow(row)) {
+        /* Strip leading number prefix (e.g. "2. Module 1" becomes
+           "Module 1") so SceneTitle contains a clean name regardless
+           of whether menu numbering is on or off. */
+        var sceneTitle = normalizeText(
+          row.getAttribute("data-slide-title") || row.textContent
+        ).replace(/^\d+\.\s*/, "");
+
+        return sceneTitle || "BLANK scene row";
+      }
+    }
+
+    return "NO parent scene";
+  }
+
+  /* =======================================================================
+   * MAIN LOGIC
    *
-   * Uses endsWith for slide matching so the script works whether
-   * menu numbering is turned on or off.
-   *
-   * If the menu DOM isn't ready yet, the function schedules a retry
-   * (up to maxAttempts times) before giving up.
+   * Tries the data store method first. If that fails, falls back to the
+   * menu DOM method. If both fail, writes a diagnostic message.
+   * ======================================================================= */
+
+  /**
+   * updateSceneTitle - Main entry point. Reads the current slide title,
+   * then attempts each detection method in order.
    */
   function updateSceneTitle(attempt) {
     attempt = attempt || 0;
@@ -109,63 +253,26 @@
       return;
     }
 
-    /* Step 2: Get all menu rows from the DOM */
-    var rows = getMenuRows();
-
-    if (!rows.length) {
-      /* Menu hasn't rendered yet - retry if we have attempts left */
-      if (attempt < maxAttempts) {
-        setTimeout(function () {
-          updateSceneTitle(attempt + 1);
-        }, retryDelay);
-        return;
-      }
-      player.SetVar("SceneTitle", "NO menu rows");
+    /* Step 2: Try the internal data store (works with or without menu) */
+    var sceneFromDS = findSceneFromDataStore(currentSlideTitle);
+    if (sceneFromDS) {
+      player.SetVar("SceneTitle", sceneFromDS);
       return;
     }
 
-    /* Step 3: Filter to slide-only rows and find the current slide.
-       Uses endsWith so "8.17.  Decision 3" matches "Decision 3"
-       when menu numbering is enabled. */
-    var slideRows = rows.filter(function (row) {
-      return !isSceneRow(row);
-    });
+    /* Step 3: Fall back to the menu DOM */
+    var menuRows = getMenuRows();
 
-    var matchingSlideRow = slideRows.find(function (row) {
-      return normalizeText(row.getAttribute("data-slide-title")).endsWith(currentSlideTitle);
-    });
-
-    if (!matchingSlideRow) {
-      player.SetVar("SceneTitle", "NO slide match: " + currentSlideTitle);
+    if (!menuRows.length && attempt < maxAttempts) {
+      /* Menu may not have rendered yet - retry */
+      setTimeout(function () {
+        updateSceneTitle(attempt + 1);
+      }, retryDelay);
       return;
     }
 
-    /* Step 4: Walk backward from the matched slide to find its scene */
-    var rowIndex = rows.indexOf(matchingSlideRow);
-
-    if (rowIndex < 0) {
-      player.SetVar("SceneTitle", "NO row index");
-      return;
-    }
-
-    for (var i = rowIndex - 1; i >= 0; i--) {
-      var row = rows[i];
-
-      if (isSceneRow(row)) {
-        /* Strip leading number prefix (e.g. "2.  Module 1" becomes
-           "Module 1") so SceneTitle contains a clean name regardless
-           of whether menu numbering is on or off. */
-        var sceneTitle = normalizeText(
-          row.getAttribute("data-slide-title") || row.textContent
-        ).replace(/^\d+\.\s*/, "");
-
-        player.SetVar("SceneTitle", sceneTitle || "BLANK scene row");
-        return;
-      }
-    }
-
-    /* No scene heading found above this slide */
-    player.SetVar("SceneTitle", "NO parent scene");
+    var sceneFromMenu = findSceneFromMenuDOM(currentSlideTitle);
+    player.SetVar("SceneTitle", sceneFromMenu);
   }
 
   /* --- Run immediately --- */
