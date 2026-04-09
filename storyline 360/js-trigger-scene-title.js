@@ -11,10 +11,10 @@
  *              %SceneTitle%) without hard-coding it per slide.
  *
  * Author:      Joseph Black
- * Date:        2026-04-06
- * Version:     1.0.0
+ * Date:        2026-04-08
+ * Version:     1.0.1
  *
- * Software:    Articulate Storyline 360 x64 v3.113.36519.0
+ * Software:    Articulate Storyline 360 x64 v3.114.36620.0
  *
  * Usage:       Add this script as an "Execute JavaScript" trigger on the
  *              top-level Slide Master. It fires each time the timeline
@@ -29,6 +29,16 @@
  *              - Diagnostic strings (prefixed "ERR", "NO", "BLANK") are
  *                written to SceneTitle when lookups fail, making it easy
  *                to troubleshoot during development.
+ *              - Works whether player menu numbering is on or off. Slide
+ *                matching uses endsWith to handle numbering prefixes, and
+ *                scene names are stripped of leading number prefixes
+ *                before being written to SceneTitle.
+ *
+ * Changelog:   1.0.1 (2026-04-08) - Fixed slide matching to use endsWith
+ *                instead of strict equality so menu numbering prefixes
+ *                do not break the lookup. Added number prefix stripping
+ *                on scene titles.
+ *              1.0.0 (2026-04-06) - Initial release.
  * ============================================================================
  */
 
@@ -72,8 +82,12 @@
   /**
    * updateSceneTitle - Main logic. Reads the current slide title from
    * Storyline, finds the matching row in the menu, then walks backward
-   * through the menu rows until it hits a scene heading. Writes the
+   * through the menu rows until it hits a scene heading. Strips any
+   * menu numbering prefix from the scene name before writing the
    * result into the "SceneTitle" variable.
+   *
+   * Uses endsWith for slide matching so the script works whether
+   * menu numbering is turned on or off.
    *
    * If the menu DOM isn't ready yet, the function schedules a retry
    * (up to maxAttempts times) before giving up.
@@ -110,13 +124,15 @@
       return;
     }
 
-    /* Step 3: Filter to slide-only rows and find the current slide */
+    /* Step 3: Filter to slide-only rows and find the current slide.
+       Uses endsWith so "8.17.  Decision 3" matches "Decision 3"
+       when menu numbering is enabled. */
     var slideRows = rows.filter(function (row) {
       return !isSceneRow(row);
     });
 
     var matchingSlideRow = slideRows.find(function (row) {
-      return normalizeText(row.getAttribute("data-slide-title")) === currentSlideTitle;
+      return normalizeText(row.getAttribute("data-slide-title")).endsWith(currentSlideTitle);
     });
 
     if (!matchingSlideRow) {
@@ -136,16 +152,14 @@
       var row = rows[i];
 
       if (isSceneRow(row)) {
+        /* Strip leading number prefix (e.g. "2.  Module 1" becomes
+           "Module 1") so SceneTitle contains a clean name regardless
+           of whether menu numbering is on or off. */
         var sceneTitle = normalizeText(
           row.getAttribute("data-slide-title") || row.textContent
-        );
+        ).replace(/^\d+\.\s*/, "");
 
-        if (sceneTitle) {
-          player.SetVar("SceneTitle", sceneTitle);
-          return;
-        }
-
-        player.SetVar("SceneTitle", "BLANK scene row");
+        player.SetVar("SceneTitle", sceneTitle || "BLANK scene row");
         return;
       }
     }
