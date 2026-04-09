@@ -9,10 +9,12 @@
 
 Automatically detects which scene the learner is currently in and writes the scene name into a Storyline variable called `SceneTitle`. This lets you display the current scene name anywhere on your slides using a `%SceneTitle%` text reference. Without this script, you would need to manually type the scene name on every slide and update each one whenever you reorganize your course. Storyline does not provide a built-in variable for the scene name, so this script fills that gap.
 
+**The course menu must be enabled in the player for this script to work.** The script reads scene headings directly from the menu, so if the menu is disabled there is nothing for the script to look up.
+
 ## How It Works
 
 1. Reads the current slide's title from Storyline's `CurrentSlideTitle` variable.
-2. Searches the course menu DOM for the matching slide entry.
+2. Searches the course menu DOM for the matching slide entry. **The menu must be enabled in the player for this step to succeed.**
 3. Walks backward through the menu until it finds a scene heading (marked with `data-is-scene="true"`).
 4. Strips any menu numbering prefix from the scene name (e.g. "2.  Module 1 Foundations" becomes "Module 1 Foundations").
 5. Writes the clean scene name into the `SceneTitle` variable.
@@ -23,8 +25,8 @@ If the menu hasn't loaded yet when the script fires, it retries automatically (u
 
 1. Open your Storyline project, go to **View > Slide Master**, and select the **parent Slide Master**.
 2. Create a trigger: **Adjust Variable**. Create a new variable called `CurrentSlideTitle` and set it to variable `Menu.SlideTitle`. Set it to fire when the timeline starts on this slide.
-3. Create a second variable called `SceneTitle`. The script writes to this; reference it on-slide with `%SceneTitle%`.
-4. Add a trigger: **Execute JavaScript** and paste the contents of `js-trigger-scene-title.js`.
+3. On the same parent Slide Master, add a second trigger: **Execute JavaScript** and paste the contents of `js-trigger-scene-title.js`. This script creates and writes to a variable called `SceneTitle`.
+4. On any slide where you want the scene name to appear, insert a text reference using `%SceneTitle%`.
 5. The course menu must be **enabled** in the player for the script to find scene headings.
 
 ## Menu Numbering
@@ -47,7 +49,7 @@ The script writes diagnostic messages into `SceneTitle` when something goes wron
 |---|---|
 | `ERR reading CurrentSlideTitle` | The `CurrentSlideTitle` variable threw an error when read. |
 | `NO CurrentSlideTitle` | The variable exists but is empty. |
-| `NO menu rows` | The menu DOM couldn't be found after all retry attempts. |
+| `NO menu rows` | The menu could not be found after all retry attempts. **The menu must be enabled in the player for this script to work.** |
 | `NO slide match: [title]` | No menu entry matched the current slide title. |
 | `NO row index` | The matched row wasn't found in the full row list (unexpected). |
 | `BLANK scene row` | A scene heading was found but had no text. |
