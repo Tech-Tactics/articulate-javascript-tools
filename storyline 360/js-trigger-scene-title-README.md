@@ -59,9 +59,9 @@ In Method 1, scene IDs are matched with `indexOf() > -1` rather than strict equa
 
 If the `DS` data store is briefly unavailable at timeline start (rare but possible on the very first slide of a course), Methods 1 and 2 fire once and give up without retrying. The script falls straight through to Method 3 and the retry loop begins there. In practice this has not caused issues, but it means a transient data store hiccup will force a reliance on the menu DOM even when the menu-independent methods should have worked.
 
-### Script will not work in Storyline Preview
+### Preview vs. published behavior
 
-The `DS` global and menu DOM are only constructed in published output, not in the Preview window inside Storyline. During development, test by publishing to Web and opening `story.html` in a browser, or by uploading to an LMS.
+The script has been tested successfully in both Storyline Preview and published output. Behavior may differ slightly in an LMS environment due to LMS-specific wrappers, iframes, or security policies, so always verify the script works in your target LMS before shipping a course.
 
 ### Tested only in Chromium browsers
 
@@ -107,7 +107,7 @@ Display `%SceneTitle%` on a test slide during development to see these messages.
 If you see "NO menu rows" on a course where all three methods should work, the most likely causes are:
 1. Articulate changed the internal `DS` structure in a Storyline update (affects Methods 1 and 2)
 2. The menu is disabled in the player (affects Method 3)
-3. Running in Storyline Preview instead of published output
+3. An LMS wrapper is interfering with the published output
 
 ## Testing After Storyline Updates
 
@@ -116,6 +116,7 @@ Because this script relies on undocumented internals, **retest after every Story
 1. Open a course with the menu enabled. Confirm `%SceneTitle%` shows correctly on several slides across different scenes.
 2. Disable the menu, republish, and confirm `%SceneTitle%` still shows correctly. If it shows "NO menu rows" or similar, Methods 1 and 2 have broken and you need to inspect the current `DS` object structure in the browser console.
 3. On a slide hidden from the menu, confirm `%SceneTitle%` still resolves correctly.
+4. Upload to your target LMS and verify the behavior there matches what you saw in Preview and local published output.
 
 ## Changelog
 
