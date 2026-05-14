@@ -5,11 +5,12 @@
  *           slide counter to the Storyline 360 player top bar.
  *
  * Author:   Joseph Black  |  Version: 1.0.1
- * Software: Articulate Storyline 360 x64 v3.113.36519.0
+ * Date:     2026-05-14
+ * Software: Articulate Storyline 360 x64 v3.116.36838.0
  *
  * Change log:
- *   1.0.1 - Slide counter hidden (display:none). Set to "block"
- *           or remove the property to re-enable.
+ *   1.0.1 (2026-05-14) - Slide counter hidden (display:none).
+ *           Set to "block" or remove the property to re-enable.
  */
 
 /* ── USER-CONFIGURABLE VARIABLES ─────────────────────────────────── */
@@ -92,6 +93,7 @@ function ensureUI() {
     pBar.style.cssText =
       `position:absolute;left:0;top:0;height:100%;border-radius:${borderRad};`;
 
+/* Slide counter hidden (display:none) — change to "block" to re-enable */
     const slideCounterText = document.createElement("span");
     slideCounterText.id = "slideCounterText";
     slideCounterText.style.cssText =
