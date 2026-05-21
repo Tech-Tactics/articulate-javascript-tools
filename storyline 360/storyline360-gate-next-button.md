@@ -2,7 +2,9 @@
 
 A reusable pattern for slides that should not allow learners to advance until they have **(a)** interacted with all required objects on the slide *and* **(b)** spent a minimum amount of time on the slide.
 
-This README documents the trigger architecture, the variables involved, and the rationale. It assumes peer-level familiarity with Storyline 360 (variables, triggers, layers, states).
+This document covers the trigger-only architecture, the variables involved, and the rationale. It assumes peer-level familiarity with Storyline 360 (variables, triggers, layers, states).
+
+> **Note on the time gate:** The trigger-only patterns below satisfy the time requirement when the slide timeline ends. In some LMS players the published seekbar is draggable even when it is not draggable in Storyline's desktop preview, which lets a learner scrub to the end of the timeline and satisfy the time gate early. If your delivery environment allows seekbar scrubbing, see **Hardening the time gate against seekbar scrubbing** near the end of this document. The companion script `js-trigger-next-gate-countdown.js` replaces the timeline-based time check with a scrub-proof wall-clock countdown.
 
 ---
 
@@ -47,10 +49,12 @@ On each card's "back side" layer, keep only:
 | 2 | Set `time_met` to False | Timeline starts on this slide | (none) |
 | 3 | Set `layer1_viewed` to False | Timeline starts on this slide | (none) |
 | 4 | Set `layer2_viewed` to False | Timeline starts on this slide | (none) |
-| 5 | Set `time_met` to True | Timeline ends on this slide *(or "reaches 30s")* | (none) |
+| 5 | Set `time_met` to True | Timeline ends on this slide *(or "reaches 30s")* — see seekbar note below | (none) |
 | 6 | Change state of Next Button to **Normal** | Timeline ends on this slide | If `layer1_viewed` = True **AND** `layer2_viewed` = True |
 | 7 | Change state of Next Button to **Normal** | Variable `layer1_viewed` changes | If `layer1_viewed` = True **AND** `layer2_viewed` = True **AND** `time_met` = True |
 | 8 | Change state of Next Button to **Normal** | Variable `layer2_viewed` changes | If `layer1_viewed` = True **AND** `layer2_viewed` = True **AND** `time_met` = True |
+
+> Trigger 5 is the time gate. It is the trigger vulnerable to seekbar scrubbing. If your LMS allows scrubbing, replace Trigger 5 with the wall-clock countdown script (see the hardening section near the end). Triggers 1–4 and 6–8 stay the same; only the source of `time_met` changes.
 
 ### Why three enable triggers (6, 7, 8)?
 
@@ -102,11 +106,13 @@ The conditional add-1 prevents double-counting on revisits to the layer.
 | 2 | Set `time_met` to False | Timeline starts | (none) |
 | 3 | Set `cards_viewed` to 0 | Timeline starts | (none) |
 | 4 | Set `layer1_viewed` to False (repeat for each `layerN_viewed`) | Timeline starts | (none) |
-| 5 | Set `time_met` to True | Timeline ends | (none) |
+| 5 | Set `time_met` to True | Timeline ends — see seekbar note below | (none) |
 | 6 | Change state of Next Button to **Normal** | Timeline ends | If `cards_viewed` >= **N** |
 | 7 | Change state of Next Button to **Normal** | Variable `cards_viewed` changes | If `cards_viewed` >= **N** **AND** `time_met` = True |
 
 **Replace N with the actual card count for the slide.** This is the only number that changes per slide.
+
+> As in Pattern A, Trigger 5 is the seekbar-vulnerable time gate. Swap it for the countdown script if scrubbing is possible in your LMS.
 
 ### Per-slide changes when replicating Pattern B
 
@@ -140,6 +146,12 @@ The player's Next button in the **Disabled** state does not fire click triggers.
 
 If error feedback on premature Next clicks is required, the only clean solution is to **hide the player's built-in Next button** and replace it with a custom button on the slide master that has its own click triggers. This is a one-time refactor that benefits the whole project.
 
+### The timeline-based time gate can be scrubbed in some LMS players
+
+This is the most important pitfall to know about, and it is not visible in Storyline's desktop preview. The time gate (Trigger 5 in both patterns) sets `time_met` to True when the slide timeline ends. In some LMS players — confirmed in at least one production environment — the published seekbar is draggable even though it is locked in Storyline's preview. A learner can grab the seekbar and drag the playhead to the end of the timeline, which fires the timeline-end event and satisfies the time gate in about one second.
+
+The interaction gate (clicking all cards) still holds, but the time floor is defeated. If your delivery environment allows seekbar scrubbing, do not rely on the timeline-ends time gate. See the hardening section below.
+
 ### Variables are global and persist across slides
 
 Variables retain their value across slides until something explicitly changes them. Default values only apply at course launch. **Without the slide-entry resets (Triggers 2-4 in Pattern A, 2-4 in Pattern B), a slide will inherit the previous slide's variable values** — and the gate will appear to skip on every slide after the first.
@@ -157,6 +169,34 @@ Storyline does not provide a stable way to check the current timeline position i
 ### Trigger order matters within the same event
 
 Multiple triggers firing on the same event (e.g., "timeline starts") fire in **top-down order** as listed in the Triggers panel. Ensure variable resets appear above any triggers that depend on those resets having run. Use the up-arrow in the Triggers panel toolbar to reorder.
+
+---
+
+## Hardening the time gate against seekbar scrubbing
+
+If your LMS allows seekbar scrubbing (test this in the actual published environment, not just Storyline preview), the timeline-ends time gate is bypassable. There are two clean fixes.
+
+### Option 1 — Remove the seekbar on gated slides
+
+If there is no seekbar, there is nothing to drag. With the seekbar removed, the timeline plays at normal speed, the timeline-end event fires only when the timeline actually ends, and the trigger-only patterns above work exactly as designed — no script needed. This is the simplest fix.
+
+Trade-off: the seekbar is also a per-slide progress indicator. Removing it means learners lose that visual cue for why Next is disabled. Pair removal with a visible "Next enables in: M:SS" indicator (see Option 2's script, which can run in display-only mode) or with on-slide text explaining the wait. Keep playback controls on any slide with narration, audio, or video that the learner legitimately needs to control.
+
+### Option 2 — Wall-clock countdown script
+
+The companion script `js-trigger-next-gate-countdown.js` replaces the timeline-based time check with a countdown measured on the browser's real clock. Because it does not depend on the timeline, scrubbing the seekbar has no effect on the gate. The script also writes a live "M:SS" value to a Storyline variable so an on-slide text box can show the learner how long remains.
+
+To integrate it:
+
+1. Create the variables `waitTime` (Number) and `timeLeft` (Text). Keep your existing `time_met` variable.
+2. Per gated slide, add a trigger to set `waitTime` to that slide's gate length.
+3. Add the JavaScript trigger with the countdown script when the timeline starts.
+4. **Remove Trigger 5** (Set `time_met` to True when timeline ends) from the slide. The script now owns `time_met`, setting it true when the countdown reaches zero. Leaving Trigger 5 in place would re-open the exploit.
+5. Place a text box containing `Next enables in: %timeLeft%`.
+
+All other triggers (1–4 and 6–8 in Pattern A; the equivalents in Pattern B) stay unchanged. They fire on "when `time_met` changes" and do not care whether a trigger or the script set the variable.
+
+See `js-trigger-next-gate-countdown-README.md` for full configuration, including a display-only mode for use alongside Option 1.
 
 ---
 
@@ -186,6 +226,11 @@ For each gated slide, verify all three completion orderings:
 2. Navigate back to the gated slide via Previous or menu.
 3. Next is disabled again. Variables are reset. Cards visually appear unvisited (if "Reset to initial state" is set).
 
+**Test 5 — Seekbar scrub (run in the published LMS, not preview):**
+1. On a gated slide, before the time threshold, grab the seekbar and drag the playhead to the end.
+2. Next should remain disabled until the real time threshold has elapsed.
+3. If Next enables early, the timeline-ends time gate is being bypassed — apply one of the hardening options above. This test only matters in the actual LMS, because the desktop preview locks the seekbar.
+
 ### Diagnostic technique
 
 If a test fails, place a temporary text box on the slide showing live variable values:
@@ -214,15 +259,15 @@ Each gated slide imposes a minimum time floor on completion. To estimate course 
 
 For 65 gated slides at 30s + 16 non-gated at 10s, the course floor is approximately **35 minutes**. Realistic completion is typically 1.3–1.5× the floor.
 
-Consider varying the time threshold per slide based on content density — dense slides may warrant 45–60 seconds, lighter slides 15–20 — rather than applying a uniform threshold across the whole course. A uniform threshold feels arbitrary on slides where it's clearly too long or too short for the actual content.
+Consider varying the time threshold per slide based on content density — dense slides may warrant 45–60 seconds, lighter slides 15–20 — rather than applying a uniform threshold across the whole course. A uniform threshold feels arbitrary on slides where it's clearly too long or too short for the actual content. Stopwatch-testing a representative sample of slides (one short, one typical, one dense, one interaction-heavy) is a quick way to calibrate the thresholds against real reading time rather than guessing.
 
 ---
 
-## Related patterns not covered here
+## Related patterns and companions
 
+- **`js-trigger-next-gate-countdown.js`** — wall-clock countdown that hardens the time gate against seekbar scrubbing and provides a visible "Next enables in: M:SS" indicator. The recommended companion to this pattern when the delivery LMS allows scrubbing.
 - **Custom Next button on slide master** — required if error-layer feedback on premature clicks is needed. One-time refactor, benefits the whole project.
 - **Per-slide completion flags** — allows skipping the gate on revisit if the learner has already completed a slide. Adds one boolean variable per gated slide but improves UX for review/navigation.
-- **JavaScript-based gating** — possible but not used in this pattern. Sacrifices auditability through the trigger panel and creates handoff complexity for developers unfamiliar with the script.
 
 ---
 
@@ -232,3 +277,13 @@ Consider varying the time threshold per slide based on content density — dense
 - The time threshold (e.g., 30 seconds) is a project-level decision. Adjust per slide as content density warrants — a uniform threshold often feels arbitrary on slides where it's clearly too long or too short for the content.
 - All gated slides can share the same `time_met` variable; only the per-card flags or counter variable need to differ between slides.
 - When adding new gated slides, copy an existing working slide rather than building from scratch — the trigger structure is mechanical and copy-tweak is faster than rebuilding.
+- Always run Test 5 (seekbar scrub) in the actual published LMS before considering a gated course complete. The exploit is invisible in Storyline's desktop preview.
+
+---
+
+## Changelog
+
+| Version | Date | Changes |
+|---|---|---|
+| 1.0.0 | — | Initial pattern: trigger-only time + interaction gate (Patterns A and B), pitfalls, testing checklist. |
+| 1.1.0 | 2026-05-21 | Documented the seekbar-scrubbing exploit and added a hardening section with two fixes (remove seekbar; wall-clock countdown script). Added Test 5. Reconciled with `js-trigger-next-gate-countdown.js`. Updated the "JavaScript gating not used" note, which is now superseded by the companion script. |
