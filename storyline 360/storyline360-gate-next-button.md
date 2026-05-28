@@ -4,7 +4,7 @@ A reusable pattern for slides that should not allow learners to advance until th
 
 This document covers the trigger-only architecture, the variables involved, and the rationale. It assumes peer-level familiarity with Storyline 360 (variables, triggers, layers, states).
 
-> **Note on the time gate:** The trigger-only patterns below satisfy the time requirement when the slide timeline ends. In some LMS players the published seekbar is draggable even when it is not draggable in Storyline's desktop preview, which lets a learner scrub to the end of the timeline and satisfy the time gate early. If your delivery environment allows seekbar scrubbing, see **Hardening the time gate against seekbar scrubbing** near the end of this document. The companion script `js-trigger-next-gate-countdown.js` replaces the timeline-based time check with a scrub-proof wall-clock countdown.
+> **Note on the time gate:** The trigger-only patterns below satisfy the time requirement when the slide timeline ends. In some LMS players the published seekbar is draggable even when it is not draggable in Storyline's desktop preview, which lets a learner scrub to the end of the timeline and satisfy the time gate early. If your delivery environment allows seekbar scrubbing, see **Hardening the time gate against seekbar scrubbing** near the end of this document. The companion script `js-trigger-player-header.js` provides a wall-clock countdown indicator that visually reassures learners while the gate is timing, and pairs with seekbar removal to close the exploit.
 
 ---
 
@@ -182,21 +182,23 @@ If there is no seekbar, there is nothing to drag. With the seekbar removed, the 
 
 Trade-off: the seekbar is also a per-slide progress indicator. Removing it means learners lose that visual cue for why Next is disabled. Pair removal with a visible "Next enables in: M:SS" indicator (see Option 2's script, which can run in display-only mode) or with on-slide text explaining the wait. Keep playback controls on any slide with narration, audio, or video that the learner legitimately needs to control.
 
-### Option 2 — Wall-clock countdown script
+### Option 2 — Wall-clock countdown indicator
 
-The companion script `js-trigger-next-gate-countdown.js` replaces the timeline-based time check with a countdown measured on the browser's real clock. Because it does not depend on the timeline, scrubbing the seekbar has no effect on the gate. The script also writes a live "M:SS" value to a Storyline variable so an on-slide text box can show the learner how long remains.
+The companion script `js-trigger-player-header.js` renders a "Next enables in: M:SS" countdown in the player's top bar, measured on the browser's real clock. The countdown reads the current slide's timeline duration automatically (no per-slide variable required), counts down independently of the timeline, and switches to "You may now continue." when the Next button becomes enabled.
+
+This option pairs with **Option 1**: it provides the visible reassurance that the gate is timing, while seekbar removal handles closing the exploit. The countdown is display-only — it does not drive `time_met` or any gate variable, so all existing triggers stay exactly as they are.
 
 To integrate it:
 
-1. Create the variables `waitTime` (Number) and `timeLeft` (Text). Keep your existing `time_met` variable.
-2. Per gated slide, add a trigger to set `waitTime` to that slide's gate length.
-3. Add the JavaScript trigger with the countdown script when the timeline starts.
-4. **Remove Trigger 5** (Set `time_met` to True when timeline ends) from the slide. The script now owns `time_met`, setting it true when the countdown reaches zero. Leaving Trigger 5 in place would re-open the exploit.
-5. Place a text box containing `Next enables in: %timeLeft%`.
+1. Open your Storyline project → **View → Slide Master** → select the top-level master slide.
+2. Add an **Execute JavaScript** trigger that runs once (e.g., when the timeline starts on the master) and paste the contents of `js-trigger-player-header.js`. If you already use this script for the progress bar, no additional trigger is needed — the countdown is included in v2.0.0+.
+3. Set each gated slide's timeline length to its intended gate duration. The countdown reads this automatically.
+4. **Keep Trigger 5** (Set `time_met` to True when timeline ends) on each gated slide. The countdown does not replace the trigger-based gate; it only displays alongside it.
+5. No per-slide variables required. Optional: create a `waitTime` Number variable if you want a manual override on specific slides (set `waitTimeOverrides = true` in the script's config block to give `waitTime` precedence over the timeline duration).
 
-All other triggers (1–4 and 6–8 in Pattern A; the equivalents in Pattern B) stay unchanged. They fire on "when `time_met` changes" and do not care whether a trigger or the script set the variable.
+The countdown hides automatically on slides where it shouldn't apply: knowledge checks (no Next button), short slides (under `minSecondsToShow` seconds, default 10), and the moment after time elapses but Next is still disabled by pending interactions (the slide's own visuals communicate what's left to do).
 
-See `js-trigger-next-gate-countdown-README.md` for full configuration, including a display-only mode for use alongside Option 1.
+See `js-trigger-player-header-README.md` for full configuration, including the `showCountdown` master on/off flag and positioning controls.
 
 ---
 
@@ -265,7 +267,7 @@ Consider varying the time threshold per slide based on content density — dense
 
 ## Related patterns and companions
 
-- **`js-trigger-next-gate-countdown.js`** — wall-clock countdown that hardens the time gate against seekbar scrubbing and provides a visible "Next enables in: M:SS" indicator. The recommended companion to this pattern when the delivery LMS allows scrubbing.
+- **`js-trigger-player-header.js`** — renders a "Next enables in: M:SS" countdown in the player chrome that pairs with seekbar removal to give learners visible reassurance the gate is timing. Display-only: does not modify any gate triggers. The recommended companion to this pattern when the delivery LMS allows seekbar scrubbing.
 - **Custom Next button on slide master** — required if error-layer feedback on premature clicks is needed. One-time refactor, benefits the whole project.
 - **Per-slide completion flags** — allows skipping the gate on revisit if the learner has already completed a slide. Adds one boolean variable per gated slide but improves UX for review/navigation.
 
@@ -286,4 +288,5 @@ Consider varying the time threshold per slide based on content density — dense
 | Version | Date | Changes |
 |---|---|---|
 | 1.0.0 | — | Initial pattern: trigger-only time + interaction gate (Patterns A and B), pitfalls, testing checklist. |
-| 1.1.0 | 2026-05-21 | Documented the seekbar-scrubbing exploit and added a hardening section with two fixes (remove seekbar; wall-clock countdown script). Added Test 5. Reconciled with `js-trigger-next-gate-countdown.js`. Updated the "JavaScript gating not used" note, which is now superseded by the companion script. |
+| 1.1.0 | 2026-05-21 | Documented the seekbar-scrubbing exploit and added a hardening section with two fixes (remove seekbar; wall-clock countdown script). Added Test 5. Updated the "JavaScript gating not used" note, which is now superseded by the companion script. |
+| 1.2.0 | 2026-05-28 | Reconciled with the renamed companion script `js-trigger-player-header.js` (v2.0.0). Rewrote Option 2 in the Hardening section to reflect the merged script's current behavior: chrome-rendered countdown, display-only (does not modify gate triggers), reads timeline duration automatically, paired with seekbar removal rather than replacing the trigger-based gate. |
