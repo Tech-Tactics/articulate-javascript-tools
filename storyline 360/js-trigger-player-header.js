@@ -13,8 +13,8 @@
  *           injected DOM, share the same persistent setInterval, and use the
  *           same font/weight/color for visual consistency.
  *
- * Author:   Joseph Black  |  Version: 2.0.0
- * Date:     2026-05-28
+ * Author:   Joseph Black  |  Version: 2.0.1
+ * Date:     2026-05-29
  * Software: Articulate Storyline 360 x64 v3.118.37003.0
  *
  * WARNING - Storyline internal dependencies (countdown only):
@@ -31,6 +31,12 @@
  *   Storyline update.
  *
  * Change log:
+ *   2.0.1 (2026-05-29) - Revisit fix. Reordered the countdown display logic to
+ *           check the Next button state BEFORE the timer. On a revisit to an
+ *           already-completed slide (Next enabled on arrival), the indicator
+ *           now immediately shows the ready message instead of restarting a
+ *           countdown. Confirmed in BLU that the prior order showed a stale
+ *           countdown while Next was already usable.
  *   2.0.0 (2026-05-28) - Renamed from js-trigger-progress-bar-slide-count to
  *           js-trigger-player-header to reflect that the script now manages
  *           multiple player-header indicators, not just the progress bar.
@@ -272,23 +278,29 @@ function updateCountdown() {
     cdDuration    = totalSeconds;
   }
 
-  /* Compute remaining time and decide what to display. */
-  const elapsed   = Math.floor((Date.now() - cdStartTime) / 1000);
-  const remaining = cdDuration - elapsed;
+  /* Compute remaining time and decide what to display.
+
+     Order matters: check the Next button state FIRST. The indicator's job is
+     to describe Next availability, so if Next is already enabled — whether
+     because the gate just completed on a first visit, or because this is a
+     revisit to an already-completed slide — show the ready message and never
+     start a visible countdown. Only when Next is still disabled does the timer
+     become relevant. */
+  const elapsed      = Math.floor((Date.now() - cdStartTime) / 1000);
+  const remaining    = cdDuration - elapsed;
   const nextDisabled = nextBtn.classList.contains("cs-disabled");
 
-  if (remaining > 0) {
-    /* Still counting → show the timer (regardless of Next state, because the
-       timer is still relevant either way). */
-    el.style.display = "block";
-    el.textContent = labelPrefix + formatTime(remaining);
-  } else if (!nextDisabled) {
-    /* Time done AND Next is enabled (first-visit complete, or revisit) →
-       confirm the learner can proceed. */
+  if (!nextDisabled) {
+    /* Next is enabled (first-visit complete, or revisit to a done slide) →
+       confirm the learner can proceed, no countdown. */
     el.style.display = "block";
     el.textContent = readyMessage;
+  } else if (remaining > 0) {
+    /* Next still disabled and time still counting → show the timer. */
+    el.style.display = "block";
+    el.textContent = labelPrefix + formatTime(remaining);
   } else {
-    /* Time done but Next is still disabled (interactions still pending) →
+    /* Next still disabled but time is done (interactions still pending) →
        hide. The slide's own visuals (unclicked flip cards, etc.) communicate
        what's left to do. */
     el.style.display = "none";

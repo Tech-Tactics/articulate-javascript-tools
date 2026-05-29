@@ -1,7 +1,7 @@
 # JavaScript Trigger Player Header in Storyline
 
 **Author:** Joseph Black
-**Version:** 2.0.0
+**Version:** 2.0.1
 **Date:** 2026-05-28
 **Tested with:** Articulate Storyline 360 x64 v3.118.37003.0
 
@@ -35,9 +35,9 @@ The countdown runs inside the same 500 ms loop as the progress bar. On each tick
 |---|---|
 | No Next button on this slide (knowledge check, certificate, etc.) | Hidden |
 | Timeline duration shorter than `minSecondsToShow` (default 10 s) | Hidden |
-| Time still counting down (Next disabled or enabled) | "Next enables in: M:SS" |
-| Time elapsed AND Next is enabled (first-visit complete, or revisit) | "You may now continue." |
-| Time elapsed BUT Next still disabled (interactions still pending) | Hidden |
+| Next button is already enabled (first-visit complete, or revisit to a done slide) | "You may now continue." |
+| Next still disabled and time still counting | "Next enables in: M:SS" |
+| Next still disabled but time has elapsed (interactions still pending) | Hidden |
 | `showCountdown` set to `false` | Hidden (feature off course-wide) |
 
 The "Time elapsed but Next still disabled" rule handles slides with combined time + interaction gates. Once the time portion is satisfied, the countdown's job is done — the slide's own visual cues (unclicked flip cards, click-to-reveals) carry the message about what's left.
@@ -127,4 +127,5 @@ None of these are public Storyline API. If a Storyline update changes these path
 |---|---|---|
 | 1.0.0 | — | Initial release with progress bar and slide counter (as `js-trigger-progress-bar-slide-count`) |
 | 1.0.1 | 2026-05-14 | Slide counter hidden (`display:none`). All code retained for easy re-enabling. |
+| 2.0.1 | 2026-05-29 | Revisit fix. Reordered the countdown display logic to check the Next button state before the timer, so a revisit to an already-completed slide (Next enabled on arrival) immediately shows the ready message instead of restarting a countdown. Confirmed in BLU that the prior order showed a stale countdown while Next was already usable. |
 | 2.0.0 | 2026-05-28 | **Renamed** from `js-trigger-progress-bar-slide-count` to `js-trigger-player-header` to reflect that the script now manages multiple player-header indicators, not just the progress bar. **Added** Next-Gate countdown indicator. Reads the current slide's timeline duration from the Storyline runtime, counts down on wall-clock time, displays only when timeline ≥ `minSecondsToShow` seconds and a Next button exists. Hides on knowledge-check / certificate slides and when time is done but Next is still disabled (interactions pending). Switches to a ready message when Next becomes enabled. `waitTime` variable supported as a fallback and as an optional per-slide override. Confirmed working on Storyline v3.118.37003.0. New config: `showCountdown`, `waitTimeVar`, `minSecondsToShow`, `labelPrefix`, `readyMessage`, `countdownX`, `countdownTextWidth`, `waitTimeOverrides`. |
